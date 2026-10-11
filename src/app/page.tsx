@@ -1,69 +1,112 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
+  const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusText, setStatusText] = useState('');
+
+  const handleSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url) return;
+    
+    setIsLoading(true);
+    setStatusText('Initiating connection to AI Brain...');
+
+    try {
+      // Direct call to Backend BIE API
+      const response = await fetch('http://localhost:8000/api/v1/bie/analyze-website', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        // Fallback for MVP if Business ID constraint fails
+        console.warn('Backend rejected direct call. Proceeding to Dashboard.');
+      } else {
+        const data = await response.json();
+        console.log('Scrape Task Started:', data);
+        setStatusText('Scraping successful!');
+      }
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Failed to connect to backend', error);
+      setStatusText('Connection failed. Proceeding...');
+      router.push('/dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 lg:p-24 animate-fade-in">
+      <div className="z-10 w-full max-w-xl items-center justify-center text-sm flex flex-col gap-8">
+        
+        <div className="text-center space-y-4">
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl text-white">
+            AdsShree <span className="gradient-text">AI</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg text-muted-foreground max-w-md mx-auto">
+            Generate 30-day marketing campaigns, stunning images, and viral videos in seconds.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="glass-panel w-full rounded-2xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+          
+          <h2 className="text-2xl font-semibold text-white mb-2">Connect Your Business</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Enter your website URL. Our Business Intelligence Engine will scan it to build your AI Brain.
+          </p>
+
+          <form onSubmit={handleSetup} className="space-y-4">
+            <div>
+              <label htmlFor="url" className="block text-sm font-medium text-gray-300 mb-1">
+                Website URL
+              </label>
+              <input
+                type="url"
+                id="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://yourbrand.com"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-white text-black hover:bg-gray-200 font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {statusText}
+                </>
+              ) : (
+                'Build AI Brain & Start'
+              )}
+            </button>
+          </form>
         </div>
-      </main>
-    </div>
+        
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          System Online
+        </div>
+      </div>
+    </main>
   );
 }
